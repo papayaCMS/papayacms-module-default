@@ -1,8 +1,8 @@
 <?php
-include_once(dirname(__FILE__).'/../../../bootstrap.php');
+include_once(dirname(__FILE__).'/bootstrap.php');
 PapayaTestCase::registerPapayaAutoloader(
   array(),
-  array('modules/_base/_classmap.php')
+  array(dirname(__FILE__).'/../src/_classmap.php')
 );
 
 class PagesConnectorTest extends PapayaTestCase {
