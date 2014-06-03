@@ -1,5 +1,9 @@
 <?php
-include_once(dirname(__FILE__).'/bootstrap.php');
+include_once(dirname(__FILE__).'/../../../bootstrap.php');
+PapayaTestCase::registerPapayaAutoloader(
+  array(),
+  array('modules/_base/_classmap.php')
+);
 
 class PagesConnectorTest extends PapayaTestCase {
 
@@ -186,7 +190,11 @@ class PagesConnectorTest extends PapayaTestCase {
 
     $this->assertEquals($expectedResult1, $pagesConnector->getTitles($pageIds, $lngId));
     $this->assertEquals($expectedResult2, $pagesConnector->getTitles($furtherPageIds, $lngId));
-    $this->assertAttributeEquals(array($lngId => $expectedResult1), '_pageTitles', $pagesConnector);
+    $this->assertAttributeEquals(
+      array('PUBLIC' => array($lngId => $expectedResult1)),
+      '_pageTitles',
+      $pagesConnector
+    );
   }
 
   /**
@@ -306,7 +314,7 @@ class PagesConnectorTest extends PapayaTestCase {
     $this->assertEquals($expectedResult1, $pagesConnector->getContents($pageIds, $lngId));
     $this->assertEquals($expectedResult2, $pagesConnector->getContents($furtherPageIds, $lngId));
     $this->assertAttributeEquals(
-      array($lngId => $expectedResult1),
+      array('PUBLIC' => array($lngId => $expectedResult1)),
       '_pageContents',
       $pagesConnector
     );
