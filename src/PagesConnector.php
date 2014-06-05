@@ -14,7 +14,7 @@
 *
 * @package Papaya-Modules
 * @subpackage _Base
-* @version $Id: PagesConnector.php 39846 2014-06-02 15:28:44Z kersken $
+* @version $Id: PagesConnector.php 39851 2014-06-05 10:00:12Z kersken $
 */
 
 /**
@@ -52,6 +52,48 @@ class PapayaBasePagesConnector extends base_connector {
   * @var array
   */
   private $_moduleGuids = array();
+
+  /**
+  * The module's own GUID for reading module options
+  * @var string
+  */
+  private $_guid = '69db080d0bb7ce20b52b04e7192a60bf';
+
+  /**
+  * Settings for this module
+  * @var array
+  */
+  public $pluginOptionFields = array(
+    'NOTIFICATION_URLS' => array(
+      'Notification URLs',
+      'isNoHTML',
+      FALSE,
+      'textarea',
+      5,
+      'One URL per line; use {%SITEMAP%} for the local sitemap URL to use',
+      'http://www.google.com/webmasters/tools/ping?sitemap={%SITEMAP%}
+http://www.bing.com/webmaster/ping.aspx?sitemap={%SITEMAP%}
+http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
+    ),
+    'SITEMAP' => array(
+      'Sitemap',
+      'isNum',
+      FALSE,
+      'pageid',
+      10,
+      '',
+      0
+    ),
+    'OUTPUT_FILTER' => array(
+      'Sitemap output filter',
+      'isNoHTML',
+      FALSE,
+      'input',
+      20,
+      '',
+      'google'
+    )
+  );
 
   /**
   * Set database access object to load pages data.
@@ -243,5 +285,66 @@ class PapayaBasePagesConnector extends base_connector {
       }
     }
     return $result;
+  }
+
+  /**
+  * Notify search engines, sending them a Google Sitemaps document
+  *
+  * To be invoked via the Action Dispatcher using the default/onPublishPage action
+  *
+  * @param type $data
+  */
+  function onPublishPage($data) {
+    if (!empty($data['languages']) && $data['published_from'] <= time() &&
+        $data['published_to'] >= time()) {
+      $options = $this->papaya()->plugins->options[$this->_guid];
+      $urlString = $options->get('NOTIFICATION_URLS', '');
+      $sitemap = $options->get('SITEMAP', 0);
+      $filter = $options->get('OUTPUT_FILTER', '');
+      if ($sitemap > 0 && $filter != '' && $urlString != '') {
+        $template = new base_simpletemplate();
+        $client = new PapayaHttpClient();
+        $urls = preg_split('(\s+)Dix', $urlString);
+        $attempts = 0;
+        $successes = 0;
+        foreach ($data['languages'] as $language) {
+          $replace = array(
+            'SITEMAP' => urlencode(
+              $this->getAbsoluteURL(
+                $this->getWebLink($sitemap, $language, $filter)
+              )
+            )
+          );
+          foreach ($urls as $url) {
+            if (!empty($url)) {
+              $attempts++;
+              $url = $template->parse($url, $replace);
+              $client->setUrl($url);
+              $client->setMethod('get');
+              $client->send();
+              if ($client->getResponseStatus() == 200) {
+                $successes++;
+              }
+            }
+          }
+        }
+        if ($attempts > 0) {
+          $severity = $successes < $attempts ?
+            PapayaMessage::SEVERITY_WARNING :
+            PapayaMessage::SEVERITY_INFO;
+          $this->papaya()->messages->dispatch(
+            new PapayaMessageLog(
+              PapayaMessageLogable::GROUP_CONTENT,
+              $severity,
+              sprintf(
+                "Sent %d sitemap pings out of a total of %d.",
+                $successes,
+                $attempts
+              )
+            )
+          );
+        }
+      }
+    }
   }
 }
