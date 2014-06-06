@@ -14,7 +14,7 @@
 *
 * @package Papaya-Modules
 * @subpackage _Base
-* @version $Id: PagesConnector.php 39600 2014-03-18 11:43:38Z weinert $
+* @version $Id: PagesConnector.php 39851 2014-06-05 10:00:12Z kersken $
 */
 
 /**
@@ -23,8 +23,9 @@
 * Usage:
 * $pagesConnector = base_pluginloader::getPluginInstance('69db080d0bb7ce20b52b04e7192a60bf', $this);
 *
-* $array = $pagesConnector->getTitles($pageId(s), $lngId);
-* $array = $pagesConnector->getContents($pageId(s), $lngId);
+* $array = $pagesConnector->getTitles($pageId(s), $languageId, $public = TRUE);
+* $array = $pagesConnector->getContents($pageId(s), $languageId, $public = TRUE);
+* $array = $pagesConnector->getModuleGuids($pageId(s), $languageId, $public = TRUE);
 */
 class PapayaBasePagesConnector extends base_connector {
 
@@ -36,28 +37,63 @@ class PapayaBasePagesConnector extends base_connector {
 
   /**
   * Memory cache for page titles.
-  * array(
-  *   (lngId) => array(
-  *     (pageId) => 'title'[,...]
-  *   )[,...]
-  * )
   * @var array
   */
   private $_pageTitles = array();
 
   /**
   * Memory cache for page contents.
-  * array(
-  *   (lngId) => array(
-  *     (pageId) => array(
-  *       'topic_id' => (int),
-  *       'topic_title' => 'title',
-  *       'topic_content' => 'content'
-  *     )[,...]
-  *   )[,...]
-  * )
+  * @var array
   */
   private $_pageContents = array();
+  
+  /**
+  * Memory cache for module GUIDs.
+  * @var array
+  */
+  private $_moduleGuids = array();
+
+  /**
+  * The module's own GUID for reading module options
+  * @var string
+  */
+  private $_guid = '69db080d0bb7ce20b52b04e7192a60bf';
+
+  /**
+  * Settings for this module
+  * @var array
+  */
+  public $pluginOptionFields = array(
+    'NOTIFICATION_URLS' => array(
+      'Notification URLs',
+      'isNoHTML',
+      FALSE,
+      'textarea',
+      5,
+      'One URL per line; use {%SITEMAP%} for the local sitemap URL to use',
+      'http://www.google.com/webmasters/tools/ping?sitemap={%SITEMAP%}
+http://www.bing.com/webmaster/ping.aspx?sitemap={%SITEMAP%}
+http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
+    ),
+    'SITEMAP' => array(
+      'Sitemap',
+      'isNum',
+      FALSE,
+      'pageid',
+      10,
+      '',
+      0
+    ),
+    'OUTPUT_FILTER' => array(
+      'Sitemap output filter',
+      'isNoHTML',
+      FALSE,
+      'input',
+      20,
+      '',
+      'google'
+    )
+  );
 
   /**
   * Set database access object to load pages data.
@@ -88,23 +124,25 @@ class PapayaBasePagesConnector extends base_connector {
   * Get page(s) titles by id(s) and language id.
   *
   * @param array|integer $pageIds
-  * @param integer $lngId
+  * @param integer $languageId
+  * @param boolean $public optional, default TRUE
   * @return array
   */
-  public function getTitles($pageIds, $lngId) {
+  public function getTitles($pageIds, $languageId, $public = TRUE) {
     $result = array();
+    $cacheKey = $public ? 'PUBLIC' : 'MODIFIED';
     if (!empty($pageIds)) {
       if (!is_array($pageIds)) {
         $pageIds = array($pageIds);
       }
-      if (!isset($this->_pageTitles[$lngId])) {
-        $this->_pageTitles[$lngId] = array();
+      if (!isset($this->_pageTitles[$cacheKey][$languageId])) {
+        $this->_pageTitles[$cacheKey][$languageId] = array();
       }
       $pageIdsToLoad = array();
       foreach ($pageIds as $pageId) {
         if ($pageId > 0) {
-          if (isset($this->_pageTitles[$lngId][$pageId])) {
-            $result[(int)$pageId] = $this->_pageTitles[$lngId][$pageId];
+          if (isset($this->_pageTitles[$cacheKey][$languageId][$pageId])) {
+            $result[(int)$pageId] = $this->_pageTitles[$cacheKey][$languageId][$pageId];
           } else {
             $pageIdsToLoad[] = $pageId;
           }
@@ -112,16 +150,21 @@ class PapayaBasePagesConnector extends base_connector {
       }
       if (!empty($pageIdsToLoad)) {
         $databaseAccess = $this->getDatabaseAccessObject();
-        $filter = $databaseAccess->getSQLCondition('tt.topic_id', $pageIdsToLoad);
+        $filter = $databaseAccess->getSqlCondition('tt.topic_id', $pageIdsToLoad);
         $sql = "SELECT tt.topic_id, tt.topic_title
                   FROM %s tt
                  WHERE $filter
                    AND tt.lng_id = %d";
-        $params = array(PAPAYA_DB_TBL_TOPICS_TRANS, $lngId);
+        $tableBaseName = $public ?
+          PapayaContentTables::PAGE_PUBLICATION_TRANSLATIONS :
+          PapayaContentTables::PAGE_TRANSLATIONS;
+        $table = $databaseAccess->getTableName($tableBaseName);
+        $params = array($table, $languageId);
         if ($res = $databaseAccess->queryFmt($sql, $params)) {
           while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
             $result[(int)$row['topic_id']] = $row['topic_title'];
-            $this->_pageTitles[$lngId][(int)$row['topic_id']] = $row['topic_title'];
+            $this->_pageTitles[$cacheKey][$languageId][(int)$row['topic_id']] =
+              $row['topic_title'];
           }
         }
       }
@@ -133,24 +176,29 @@ class PapayaBasePagesConnector extends base_connector {
   /**
   * Get page(s) titles and contents by id(s) and language id.
   *
-  * @param array|integer $pageIds
-  * @param integer $lngId
+  * @param mixed array|integer $pageIds
+  * @param integer $languageId
+  * @param boolean $public optional, default TRUE
   * @return array
   */
-  public function getContents($pageIds, $lngId) {
+  public function getContents($pageIds, $languageId, $public = TRUE) {
     $result = array();
+    $cacheKey = $public ? 'PUBLIC' : 'MODIFIED';
     if (!empty($pageIds)) {
       if (!is_array($pageIds)) {
         $pageIds = array($pageIds);
       }
-      if (!isset($this->_pageContents[$lngId])) {
-        $this->_pageContents[$lngId] = array();
+      if (!isset($this->_pageContents[$cacheKey][$languageId])) {
+        $this->_pageContents[$cacheKey][$languageId] = array();
+      }
+      if (!isset($this->_pageTitles[$cacheKey][$languageId])) {
+        $this->_pageTitles[$cacheKey][$languageId] = array();
       }
       $pageIdsToLoad = array();
       foreach ($pageIds as $pageId) {
         if ($pageId > 0) {
-          if (isset($this->_pageContents[$lngId][$pageId])) {
-            $result[(int)$pageId] = $this->_pageContents[$lngId][$pageId];
+          if (isset($this->_pageContents[$cacheKey][$languageId][$pageId])) {
+            $result[(int)$pageId] = $this->_pageContents[$cacheKey][$languageId][$pageId];
           } else {
             $pageIdsToLoad[] = $pageId;
           }
@@ -158,21 +206,145 @@ class PapayaBasePagesConnector extends base_connector {
       }
       if (!empty($pageIdsToLoad)) {
         $databaseAccess = $this->getDatabaseAccessObject();
-        $filter = $databaseAccess->getSQLCondition('tt.topic_id', $pageIdsToLoad);
+        $filter = $databaseAccess->getSqlCondition('tt.topic_id', $pageIdsToLoad);
         $sql = "SELECT tt.topic_id, tt.topic_title, tt.topic_content
                   FROM %s tt
                  WHERE $filter
                    AND tt.lng_id = %d";
-        $params = array(PAPAYA_DB_TBL_TOPICS_TRANS, $lngId);
+        $tableBaseName = $public ?
+          PapayaContentTables::PAGE_PUBLICATION_TRANSLATIONS :
+          PapayaContentTables::PAGE_TRANSLATIONS;
+        $table = $databaseAccess->getTableName($tableBaseName);
+        $params = array($table, $languageId);
         if ($res = $databaseAccess->queryFmt($sql, $params)) {
           while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
             $result[(int)$row['topic_id']] = $row;
-            $this->_pageContents[$lngId][(int)$row['topic_id']] = $row;
-            $this->_pageTitles[$lngId][(int)$row['topic_id']] = $row['topic_title'];
+            $this->_pageContents[$cacheKey][$languageId][(int)$row['topic_id']] = $row;
+            $this->_pageTitles[$cacheKey][$languageId][(int)$row['topic_id']] =
+              $row['topic_title'];
           }
         }
       }
     }
     return $result;
+  }
+
+  /**
+  * Get module id(s) by page id(s) and language id.
+  *
+  * @param mixed array|integer $pageIds
+  * @param integer $languageId
+  * @param boolean $public optional, default TRUE
+  * @return array
+  */
+  public function getModuleGuids($pageIds, $languageId, $public = TRUE) {
+    $result = array();
+    $cacheKey = $public ? 'PUBLIC' : 'MODIFIED';
+    if (!empty($pageIds)) {
+      if (!is_array($pageIds)) {
+        $pageIds = array($pageIds);
+      }
+      if (!isset($this->_moduleGuids[$cacheKey][$languageId])) {
+        $this->_moduleGuids[$cacheKey][$languageId] = array();
+      }
+      $pageIdsToLoad = array();
+      foreach ($pageIds as $pageId) {
+        if ($pageId > 0) {
+          if (isset($this->_moduleGuids[$cacheKey][$languageId][$pageId])) {
+            $result[(int)$pageId] = $this->_moduleGuids[$cacheKey][$languageId][$pageId];
+          } else {
+            $pageIdsToLoad[] = $pageId;
+          }
+        }
+      }
+      if (!empty($pageIdsToLoad)) {
+        $databaseAccess = $this->getDatabaseAccessObject();
+        $filter = $databaseAccess->getSqlCondition('topic_id', $pageIdsToLoad);
+        $sql = "SELECT tt.topic_id, tt.view_id, tt.lng_id, v.module_guid
+                  FROM %s tt
+                 INNER JOIN %s v
+                    ON tt.view_id = v.view_id
+                 WHERE $filter
+                   AND lng_id = %d";
+        $tableBaseName = $public ?
+          PapayaContentTables::PAGE_PUBLICATION_TRANSLATIONS :
+          PapayaContentTables::PAGE_TRANSLATIONS;
+        $table = $databaseAccess->getTableName($tableBaseName);
+        $parameters = array(
+          $table,
+          $databaseAccess->getTableName(PapayaContentTables::VIEWS),
+          $languageId
+        );
+        if ($res = $databaseAccess->queryFmt($sql, $parameters)) {
+          while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
+            $result[(int)$row['topic_id']] = $row['module_guid'];
+            $this->_moduleGuids[$cacheKey][$languageId][(int)$row['topic_id']] =
+              $row['module_guid'];
+          }
+        }
+      }
+    }
+    return $result;
+  }
+
+  /**
+  * Notify search engines, sending them a Google Sitemaps document
+  *
+  * To be invoked via the Action Dispatcher using the default/onPublishPage action
+  *
+  * @param type $data
+  */
+  function onPublishPage($data) {
+    if (!empty($data['languages']) && $data['published_from'] <= time() &&
+        $data['published_to'] >= time()) {
+      $options = $this->papaya()->plugins->options[$this->_guid];
+      $urlString = $options->get('NOTIFICATION_URLS', '');
+      $sitemap = $options->get('SITEMAP', 0);
+      $filter = $options->get('OUTPUT_FILTER', '');
+      if ($sitemap > 0 && $filter != '' && $urlString != '') {
+        $template = new base_simpletemplate();
+        $client = new PapayaHttpClient();
+        $urls = preg_split('(\s+)Dix', $urlString);
+        $attempts = 0;
+        $successes = 0;
+        foreach ($data['languages'] as $language) {
+          $replace = array(
+            'SITEMAP' => urlencode(
+              $this->getAbsoluteURL(
+                $this->getWebLink($sitemap, $language, $filter)
+              )
+            )
+          );
+          foreach ($urls as $url) {
+            if (!empty($url)) {
+              $attempts++;
+              $url = $template->parse($url, $replace);
+              $client->setUrl($url);
+              $client->setMethod('get');
+              $client->send();
+              if ($client->getResponseStatus() == 200) {
+                $successes++;
+              }
+            }
+          }
+        }
+        if ($attempts > 0) {
+          $severity = $successes < $attempts ?
+            PapayaMessage::SEVERITY_WARNING :
+            PapayaMessage::SEVERITY_INFO;
+          $this->papaya()->messages->dispatch(
+            new PapayaMessageLog(
+              PapayaMessageLogable::GROUP_CONTENT,
+              $severity,
+              sprintf(
+                "Sent %d sitemap pings out of a total of %d.",
+                $successes,
+                $attempts
+              )
+            )
+          );
+        }
+      }
+    }
   }
 }
