@@ -4,7 +4,7 @@
          strict="false"
          bootstrap="tests/bootstrap.php">
   <testsuites>
-    <testsuite name="papayaCMS Module Newsletter">
+    <testsuite name="papayaCMS Module Default">
       <directory suffix="Test.php">tests</directory>
     </testsuite>
   </testsuites>
