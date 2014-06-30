@@ -14,7 +14,7 @@
 *
 * @package Papaya-Modules
 * @subpackage _Base
-* @version $Id: PagesConnector.php 39851 2014-06-05 10:00:12Z kersken $
+* @version $Id: PagesConnector.php 39866 2014-06-30 09:24:58Z kersken $
 */
 
 /**
@@ -308,12 +308,19 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
         $attempts = 0;
         $successes = 0;
         foreach ($data['languages'] as $language) {
+          $languageIdentifier = $this
+            ->papaya()
+            ->languages
+            ->getLanguage($language)
+            ->identifier;
+          $reference = $this
+            ->papaya()
+            ->pageReferences
+            ->get($languageIdentifier, $sitemap);
+          $reference->setPreview(FALSE);
+          $link = $reference->get();
           $replace = array(
-            'SITEMAP' => urlencode(
-              $this->getAbsoluteURL(
-                $this->getWebLink($sitemap, $language, $filter)
-              )
-            )
+            'SITEMAP' => urlencode($link)
           );
           foreach ($urls as $url) {
             if (!empty($url)) {
