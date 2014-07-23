@@ -164,6 +164,10 @@ class actionbox_categteaserthumb extends base_actionbox {
   */
   function callbackSurferPerm($name, $field, $data) {
     $surfersObj = $this->papaya()->plugins->get('06648c9c955e1a0e06a7bd381748c4e4', $this);
-    return $surfersObj->getPermCombo($name, $field, $data, $this->paramName);
+    $result = '';
+    if (is_object($surfersObj)) {
+      $result = $surfersObj->getPermCombo($name, $field, $data, $this->paramName);
+    }
+    return $result;
   }
 }
