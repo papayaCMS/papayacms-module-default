@@ -41,6 +41,15 @@ class content_sitemap extends base_content {
     'link_showhidden' => array(
       'Show hidden', 'isNum', TRUE, 'yesno', NULL, '', 0
     ),
+    'add_external' => array(
+      'Add sitemaps from other modules',
+      'isNum',
+      TRUE,
+      'yesno',
+      NULL,
+      '',
+      0
+    ),
     'link_outputmode' => array(
       'Link output mode', 'isAlphaNumChar', FALSE, 'function', 'callbackOutputModes', '', ''
     )
@@ -79,7 +88,18 @@ class content_sitemap extends base_content {
       $viewMode = NULL;
     }
     $map = new base_sitemap($this->parentObj, $this->data, NULL, $viewMode);
-    $result .= $map->getXML(!$this->data['link_showhidden']);
+    if ($this->data['add_external'] == 1) {
+      $result .= sprintf(
+        '<sitemap format="%s" date="%s">'.LF,
+        papaya_strings::escapeHTMLChars($this->data['format']),
+        papaya_strings::escapeHTMLChars(date('Y-m-d H:i:s'))
+      );
+      $result .= $map->getXML(!$this->data['link_showhidden'], FALSE);
+      $result .= $this->getExternalSitemapData();
+      $result .= '</sitemap>'.LF;
+    } else {
+      $result .= $map->getXML(!$this->data['link_showhidden']);
+    }
     return $result;
   }
 
@@ -127,6 +147,23 @@ class content_sitemap extends base_content {
       }
     }
     $result .= '</select>';
+    return $result;
+  }
+
+  /**
+  * Get sitemap data from registered module connectors
+  *
+  * @return string
+  */
+  public function getExternalSitemapData() {
+    $result = '';
+    $connector = $this->papaya()->plugins->get('79f18e7c40824a0f975363346716ff62');
+    if (is_object($connector)) {
+      $data = $connector->call('default', 'onCreateSitemap', $this->data);
+      foreach ($data as $guid => $output) {
+        $result .= $output;
+      }
+    }
     return $result;
   }
 }
