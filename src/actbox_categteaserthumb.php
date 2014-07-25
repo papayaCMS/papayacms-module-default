@@ -79,7 +79,7 @@ class actionbox_categteaserthumb extends base_actionbox {
     'perm' => array(
       'Surfer permission',
       'isNum',
-      TRUE,
+      FALSE,
       'function',
       'callbackSurferPerm',
       'Permission to view this or "none" if generally allowed',
@@ -107,7 +107,7 @@ class actionbox_categteaserthumb extends base_actionbox {
     $this->setDefaultData();
     $result = '';
     $permission = TRUE;
-    if ($this->data['perm'] > 0) {
+    if (isset($this->data['perm']) && $this->data['perm'] > 0) {
       $surfer = $this->papaya()->surfer;
       if (!$surfer->hasPerm($this->data['perm'])) {
         $permission = FALSE;

@@ -56,7 +56,7 @@ class actionbox_categteaser extends base_actionbox {
     'perm' => array(
       'Surfer permission',
       'isNum',
-      TRUE,
+      FALSE,
       'function',
       'callbackSurferPerm',
       'Permission to view this or "none" if generally allowed',
@@ -74,7 +74,7 @@ class actionbox_categteaser extends base_actionbox {
     $this->setDefaultData();
     $result = '';
     $permission = TRUE;
-    if ($this->data['perm'] > 0) {
+    if (isset($this->data['perm']) && $this->data['perm'] > 0) {
       $surfer = $this->papaya()->surfer;
       if (!$surfer->hasPerm($this->data['perm'])) {
         $permission = FALSE;
@@ -109,6 +109,10 @@ class actionbox_categteaser extends base_actionbox {
   */
   function callbackSurferPerm($name, $field, $data) {
     $surfersObj = $this->papaya()->plugins->get('06648c9c955e1a0e06a7bd381748c4e4', $this);
-    return $surfersObj->getPermCombo($name, $field, $data, $this->paramName);
+    $result = '';
+    if (is_object($surfersObj)) {
+      $result = $surfersObj->getPermCombo($name, $field, $data, $this->paramName);
+    }
+    return $result;
   }
 }
