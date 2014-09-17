@@ -88,7 +88,7 @@ class content_sitemap extends base_content {
       $viewMode = NULL;
     }
     $map = new base_sitemap($this->parentObj, $this->data, NULL, $viewMode);
-    if ($this->data['add_external'] == 1) {
+    if (isset($this->data['add_external']) && $this->data['add_external'] == 1) {
       $result .= sprintf(
         '<sitemap format="%s" date="%s">'.LF,
         papaya_strings::escapeHTMLChars($this->data['format']),
