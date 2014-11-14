@@ -5,6 +5,7 @@
   <classes file="_classmap.php"/>
   <modules>
     <module type="box" guid="25295ec246600e6f91a819e345acc3e3" name="HTML" class="actionbox_html" outputfilter="no">A box module with one input field. Users can write either simple text or use HTML.</module>
+    <module type="box" guid="afd2492e9012b1e1fa2aa1a6d72313ff" name="HTML Box with server variable" class="actionbox_html_servervar" outputfilter="no">A box module to display HTML depending on a server variable.</module>
     <module type="box" guid="308b57d4d1f3f5ab7e2c542c365035b7" name="Richtext (without output filter)" class="actionbox_richtext" outputfilter="no">A box module with one input field. Users can write content using the richt text editor.</module>
     <module type="box" guid="a7690335738b9a5ff005fe1a719beb77" name="Richtext (with template)" class="actionbox_richtextfilter">A box module with one input field. Users can write content using the richt text editor.</module>
     <module type="box" guid="76802ed996f92425c103f062985e710c" name="Header Image" class="actionbox_background_image">This box module makes it easy to use an image from the MediaDB as a background image.</module>

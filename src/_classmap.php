@@ -7,6 +7,7 @@ return array(
   'actionbox_categteaser' => '/actbox_categteaser.php',
   'actionbox_categteaserthumb' => '/actbox_categteaserthumb.php',
   'actionbox_html' => '/actbox_html.php',
+  'actionbox_html_servervar' => '/actbox_html_servervar.php',
   'actionbox_pagelink' => '/actbox_pagelink.php',
   'actionbox_pagelink_extended' => '/actbox_pagelink_extended.php',
   'actionbox_prevnext' => '/actbox_prevnext.php',
