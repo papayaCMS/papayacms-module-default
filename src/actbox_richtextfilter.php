@@ -39,7 +39,7 @@ class actionbox_richtextfilter extends base_actionbox {
     'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
       array(0 => 'Yes', 1 => 'No'),
       'Apply linebreaks from input to the HTML output.', 0),
-    'text' => array('Text', 'isXhtml', FALSE, 'richtext', 30, '', '')
+    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 30, '', '')
   );
 
   /**
