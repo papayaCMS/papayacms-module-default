@@ -160,8 +160,10 @@ class content_sitemap extends base_content {
     $connector = $this->papaya()->plugins->get('79f18e7c40824a0f975363346716ff62');
     if (is_object($connector)) {
       $data = $connector->call('default', 'onCreateSitemap', $this->data);
-      foreach ($data as $guid => $output) {
-        $result .= $output;
+      if (is_array($data)) {
+        foreach ($data as $guid => $output) {
+          $result .= $output;
+        }
       }
     }
     return $result;
