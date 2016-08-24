@@ -111,7 +111,7 @@ class content_imgtopic extends base_content {
   * @access public
   * @return string
   */
-  function getParsedTeaser() {
+  function getParsedTeaser($parseParams = NULL) {
     $this->setDefaultData();
     $dom = new PapayaXmlDocument();
     $teaser = $dom->appendElement('teaser');

@@ -58,7 +58,7 @@ class content_xhtml extends base_content {
   * @access public
   * @return string
   */
-  function getParsedTeaser() {
+  function getParsedTeaser($parseParams = NULL) {
     $this->setDefaultData();
     $result = sprintf(
       '<title>%s</title>'.LF,

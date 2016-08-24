@@ -131,9 +131,12 @@ class content_tagcateg extends base_content {
   }
 
   /**
-  * generate edit form
-  */
-  function getForm() {
+   * generate edit form
+   * @param string $dialogTitlePrefix
+   * @param string $dialogIcon
+   * @return string
+   */
+  function getForm($dialogTitlePrefix = '', $dialogIcon = '') {
     $result = '';
     $result .= $this->getContentToolbar();
 
@@ -196,9 +199,11 @@ class content_tagcateg extends base_content {
   }
 
   /**
-  * get modified state
-  */
-  function modified() {
+   * get modified state
+   * @param string $marker
+   * @return bool
+   */
+  function modified($marker = 'save') {
     if (empty($this->params['contentmode'])) {
       $this->params['contentmode'] = 0;
     }
@@ -287,7 +292,7 @@ class content_tagcateg extends base_content {
   * @access public
   * @return string
   */
-  function getParsedTeaser() {
+  function getParsedTeaser($parseParams = NULL) {
     $this->setDefaultData();
     $result = sprintf(
       '<title>%s</title>'.LF,

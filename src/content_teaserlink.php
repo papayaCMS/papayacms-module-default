@@ -85,7 +85,7 @@ class content_teaserlink extends base_content {
   * @access public
   * @return string
   */
-  function getParsedTeaser() {
+  function getParsedTeaser($parseParams = NULL) {
     $this->setDefaultData();
     $result = sprintf(
       '<title encoded="%s">%s</title>'.LF,

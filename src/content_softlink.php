@@ -168,7 +168,7 @@ class content_softlink extends base_content {
   * @access public
   * @return string
   */
-  function getParsedTeaser() {
+  function getParsedTeaser($parseParams = NULL) {
     if (isset($this->data['page']) && $this->data['page'] > 0 &&
         $this->data['page'] != $this->parentObj->topicId &&
         isset($GLOBALS['PAPAYA_PAGE'])) {
