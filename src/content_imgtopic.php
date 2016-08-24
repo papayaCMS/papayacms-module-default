@@ -64,7 +64,7 @@ class content_imgtopic extends base_content {
    * Get parsed data
    *
    * @access public
-   * @param null $parseParams
+   * @param array|null $parseParams
    * @return string
    */
   function getParsedData($parseParams = NULL) {

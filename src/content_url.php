@@ -45,11 +45,13 @@ class content_url extends base_content {
   );
 
   /**
-  * Redirect to URL
-  *
-  * @access public
-  */
-  function getParsedData() {
+   * Redirect to URL
+   *
+   * @access public
+   * @param array|null $parseParams
+   * @return NULL|string|void
+   */
+  function getParsedData($parseParams = NULL) {
     if (isset($this->data['url']) && trim($this->data['url']) != '' &&
         $this->data['url'] != $this->parentObj->topicId) {
       if (isset($this->data['with_params']) &&

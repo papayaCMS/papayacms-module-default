@@ -50,12 +50,13 @@ class content_softlink extends base_content {
   private $filter;
 
   /**
-  * Exchange topic in page object.
-  *
-  * @access public
-  * @return boolean FALSE
-  */
-  function getParsedData() {
+   * Exchange topic in page object.
+   *
+   * @access public
+   * @param array|null $parseParams
+   * @return bool FALSE
+   */
+  function getParsedData($parseParams = NULL) {
     if (isset($this->data['page']) && $this->data['page'] > 0 &&
         $this->data['page'] != $this->parentObj->topicId &&
         isset($GLOBALS['PAPAYA_PAGE'])) {

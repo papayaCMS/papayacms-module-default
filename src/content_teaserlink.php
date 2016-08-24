@@ -54,7 +54,7 @@ class content_teaserlink extends base_content {
   * Redirect to URL
   *
   * @access public
-  * @param array | NULL $parseParams Parameters from output filter
+  * @param array|NULL $parseParams Parameters from output filter
   * @return string
   */
   function getParsedData($parseParams = NULL) {

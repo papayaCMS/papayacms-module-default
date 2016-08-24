@@ -211,12 +211,13 @@ class content_tagcateg extends base_content {
   }
 
   /**
-  * Get parsed data
-  *
-  * @access public
-  * @return string
-  */
-  function getParsedData() {
+   * Get parsed data
+   *
+   * @access public
+   * @param array|null $parseParams
+   * @return string
+   */
+  function getParsedData($parseParams = NULL) {
     $this->setDefaultData();
     $result = sprintf(
       '<title encoded="%s">%s</title>'.LF,

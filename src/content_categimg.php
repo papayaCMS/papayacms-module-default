@@ -81,7 +81,7 @@ class content_categimg extends base_content {
   * Get parsed data
   *
   * @access public
-  * @param array | NULL $parseParams Parameters from output filter
+  * @param array|NULL $parseParams Parameters from output filter
   * @return string
   */
   function getParsedData($parseParams = NULL) {
