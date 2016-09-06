@@ -25,6 +25,7 @@
 *
 * $array = $pagesConnector->getTitles($pageId(s), $languageId, $public = TRUE);
 * $array = $pagesConnector->getContents($pageId(s), $languageId, $public = TRUE);
+* $array = $pagesConnector->getTeasers($pageId(s), $languageId, $public = TRUE);
 * $array = $pagesConnector->getModuleGuids($pageId(s), $languageId, $public = TRUE);
 */
 class PapayaBasePagesConnector extends base_connector {
@@ -222,6 +223,61 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
             $this->_pageContents[$cacheKey][$languageId][(int)$row['topic_id']] = $row;
             $this->_pageTitles[$cacheKey][$languageId][(int)$row['topic_id']] =
               $row['topic_title'];
+          }
+        }
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Get the teasers for one or more pages
+   *
+   * @param papaya_page $page
+   * @param array|integer $pageIds
+   * @param integer $languageId
+   * @param boolean $public optional, default value TRUE
+   * @param boolean $asStrings optional, default value FALSE
+   * @return array
+   */
+  public function getTeasers($page, $pageIds, $languageId, $public = TRUE, $asStrings = FALSE) {
+    $result = array();
+    if (!empty($pageIds)) {
+      $modules = $this->getModuleGuids($pageIds, $languageId, $public);
+      $contents = $this->getContents($pageIds, $languageId, $public);
+      foreach ($modules as $pageId => $moduleGuid) {
+        $module = $this->papaya()->plugins->get($moduleGuid, $page);
+        $content = $contents[$pageId];
+        if ($module instanceof base_content) {
+          $module->setData($content['topic_content']);
+          $teaser = $module->getParsedTeaser();
+          if ($asStrings) {
+            $result[$pageId] = $teaser;
+          } else {
+            $doc = new PapayaXmlDocument();
+            $root = $doc->createElement('teaser', '', array('topic_id' => $pageId));
+            $root->appendXml($teaser);
+            $result[$pageId] = $root;
+          }
+        } elseif ($module instanceof PapayaPluginAppendable) {
+          $xml = new PapayaXmlDocument();
+          $xml->loadXml($content['topic_content']);
+          $contentArray = [];
+          $xpath = $xml->xpath();
+          foreach ($xpath->evaluate('//data-element') as $dataElement) {
+            $name = $dataElement->getAttribute('name');
+            if (!empty($name)) {
+              $contentArray[$name] = $dataElement->textContent;
+            }
+          }
+          $module->content(new PapayaPluginEditableContent($contentArray));
+          $xml = new PapayaXmlDocument();
+          $root = $xml->appendElement('teaser', array('topic_id' => $pageId));
+          $module->appendQuoteTo($root);
+          if ($asStrings) {
+            $result[$pageId] = $xml->saveXML($root);
+          } else {
+            $result[$pageId] = $root;
           }
         }
       }
