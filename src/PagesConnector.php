@@ -255,7 +255,11 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
             $result[$pageId] = $teaser;
           } else {
             $doc = new PapayaXmlDocument();
-            $root = $doc->createElement('teaser', '', array('topic_id' => $pageId));
+            $root = $doc->createElement(
+              'teaser',
+              '',
+              array('topic_id' => $pageId, 'href' => $this->getWebLink($pageId))
+            );
             $root->appendXml($teaser);
             $result[$pageId] = $root;
           }
@@ -272,7 +276,10 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
           }
           $module->content(new PapayaPluginEditableContent($contentArray));
           $xml = new PapayaXmlDocument();
-          $root = $xml->appendElement('teaser', array('topic_id' => $pageId));
+          $root = $xml->appendElement(
+            'teaser',
+            array('topic_id' => $pageId, 'href' => $this->getWebLink($pageId))
+          );
           $module->appendQuoteTo($root);
           if ($asStrings) {
             $result[$pageId] = $xml->saveXML($root);
