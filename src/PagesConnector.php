@@ -258,7 +258,12 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
             $root = $doc->createElement(
               'teaser',
               '',
-              array('topic_id' => $pageId, 'href' => $this->getWebLink($pageId))
+              array(
+                'page-id' => $pageId,
+                'plugin-guid' => $moduleGuid,
+                'plugin' => get_class($module),
+                'href' => $this->getWebLink($pageId)
+              )
             );
             $root->appendXml($teaser);
             $result[$pageId] = $root;
@@ -278,7 +283,12 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
           $xml = new PapayaXmlDocument();
           $root = $xml->appendElement(
             'teaser',
-            array('topic_id' => $pageId, 'href' => $this->getWebLink($pageId))
+            array(
+              'page-id' => $pageId,
+              'plugin-guid' => $moduleGuid,
+              'plugin' => get_class($module),
+              'href' => $this->getWebLink($pageId)
+            )
           );
           $module->appendQuoteTo($root);
           if ($asStrings) {
