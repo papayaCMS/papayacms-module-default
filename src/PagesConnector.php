@@ -271,13 +271,21 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
         } elseif ($module instanceof PapayaPluginAppendable) {
           $xml = new PapayaXmlDocument();
           $xml->loadXml($content['topic_content']);
-          $contentArray = [];
+          $fullContentArray = [];
           $xpath = $xml->xpath();
           foreach ($xpath->evaluate('//data-element') as $dataElement) {
             $name = $dataElement->getAttribute('name');
             if (!empty($name)) {
-              $contentArray[$name] = $dataElement->textContent;
+              if (!isset($fullContentArray[$name])) {
+                $fullContentArray[$name] = [];
+              }
+              $fullContentArray[$name][$this->getNodeDepth($dataElement)] = $dataElement->textContent;
             }
+          }
+          $contentArray = [];
+          foreach ($fullContentArray as $name => $values) {
+            ksort($values);
+            $contentArray[$name] = array_shift($values);
           }
           $module->content(new PapayaPluginEditableContent($contentArray));
           $xml = new PapayaXmlDocument();
@@ -291,6 +299,78 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
             )
           );
           $module->appendQuoteTo($root);
+          if ($asStrings) {
+            $result[$pageId] = $xml->saveXML($root);
+          } else {
+            $result[$pageId] = $root;
+          }
+        }
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Get the parsed contents for one or more pages
+   *
+   * @param papaya_page $page
+   * @param array|integer $pageIds
+   * @param integer $languageId
+   * @param boolean $public optional, default value TRUE
+   * @param boolean $asStrings optional, default value FALSE
+   * @return array
+   */
+  public function getParsedContents($page, $pageIds, $languageId, $public = TRUE, $asStrings = FALSE) {
+    $result = array();
+    if (!empty($pageIds)) {
+      $modules = $this->getModuleGuids($pageIds, $languageId, $public);
+      $contents = $this->getContents($pageIds, $languageId, $public);
+      foreach ($modules as $pageId => $moduleGuid) {
+        $module = $this->papaya()->plugins->get($moduleGuid, $page);
+        $content = $contents[$pageId];
+        if ($module instanceof base_content) {
+          $module->setData($content['topic_content']);
+          $pageContent = $module->getParsedData();
+          if ($asStrings) {
+            $result[$pageId] = $pageContent;
+          } else {
+            $doc = new PapayaXmlDocument();
+            $root = $doc->createElement(
+              'content',
+              '',
+              array(
+                'page-id' => $pageId,
+                'plugin-guid' => $moduleGuid,
+                'plugin' => get_class($module),
+                'href' => $this->getWebLink($pageId)
+              )
+            );
+            $root->appendXml($pageContent);
+            $result[$pageId] = $root;
+          }
+        } elseif ($module instanceof PapayaPluginAppendable) {
+          $xml = new PapayaXmlDocument();
+          $xml->loadXml($content['topic_content']);
+          $contentArray = [];
+          $xpath = $xml->xpath();
+          foreach ($xpath->evaluate('//data-element') as $dataElement) {
+            $name = $dataElement->getAttribute('name');
+            if (!empty($name)) {
+              $contentArray[$name] = $dataElement->textContent;
+            }
+          }
+          $module->content(new PapayaPluginEditableContent($contentArray));
+          $xml = new PapayaXmlDocument();
+          $root = $xml->appendElement(
+            'content',
+            array(
+              'page-id' => $pageId,
+              'plugin-guid' => $moduleGuid,
+              'plugin' => get_class($module),
+              'href' => $this->getWebLink($pageId)
+            )
+          );
+          $module->appendTo($root);
           if ($asStrings) {
             $result[$pageId] = $xml->saveXML($root);
           } else {
@@ -426,5 +506,20 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
         }
       }
     }
+  }
+
+  /**
+   * Get depth of a DOM node within its document
+   *
+   * @param DOMNode $element
+   * @return int
+   */
+  private function getNodeDepth($element) {
+    $depth = 0;
+    while ($element != NULL) {
+      $depth++;
+      $element = $element->parentNode;
+    }
+    return $depth;
   }
 }
