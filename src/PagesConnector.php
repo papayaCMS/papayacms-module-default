@@ -441,6 +441,30 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
   }
 
   /**
+   * Get page dependencies by page ID(s)
+   *
+   * @param mixed int|array $pageIds
+   * @return array
+   */
+  public function getPageDependencies($pageIds) {
+    $result = [];
+    $databaseAccess = $this->getDatabaseAccessObject();
+    $sql = "SELECT topic_id, topic_origin_id, topic_synchronization
+              FROM %s
+             WHERE ".str_replace('%', '%%', $databaseAccess->getSqlCondition('topic_id', $pageIds));
+    $parameters = [$databaseAccess->getTableName('topic_dependencies')];
+    if ($res = $databaseAccess->queryFmt($sql, $parameters)) {
+      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
+        $result[$row['topic_id']] = [
+          'origin_id' => $row['topic_origin_id'],
+          'synchronization' => $row['topic_synchronization']
+        ];
+      }
+    }
+    return $result;
+  }
+
+  /**
   * Notify search engines, sending them a Google Sitemaps document
   *
   * To be invoked via the Action Dispatcher using the default/onPublishPage action
