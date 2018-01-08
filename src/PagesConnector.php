@@ -479,9 +479,7 @@ http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap={%SITEMAP%}'
     $parameters = [$databaseAccess->getTableName('topic_dependencies'), $pageId];
     if ($res = $databaseAccess->queryFmt($sql, $parameters)) {
       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-        $result[] = [
-          $row['topic_id'] => $row['topic_synchronization']
-        ];
+        $result[$row['topic_id']] = $row['topic_synchronization'];
       }
     }
     return $result;
