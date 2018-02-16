@@ -32,8 +32,8 @@ class content_tagcateg extends base_content {
   * @var array $editFields
   */
   var $editFields = array(
-    'tag_id' => array('Tag', 'isNum', TRUE, 'disabled_function',
-      'callbackSelectedTag', 'Go to "Tag Selection" to modify.', ''),
+    'tag_id_output' => array('Tag', NULL, FALSE, 'disabled_function',
+      'callbackSelectedTags', 'Go to "Tag Selection" to modify.'),
     'max' => array('Count', 'isNum', TRUE, 'input', 5, '', 10000),
     'columns' => array('Column count', 'isNum', TRUE, 'input', 1, '', 2),
     'sort' => array(
@@ -102,13 +102,12 @@ class content_tagcateg extends base_content {
   function execute() {
     $this->tagSelector = papaya_tagselector::getInstance($this->parentObj);
     $this->setDefaultData();
-    if (isset($this->tagSelector) && is_object($this->tagSelector) &&
-        get_class($this->tagSelector) == 'papaya_tagselector') {
-      $this->tagSelectorForm =
-        $this->tagSelector->getTagSelector(array($this->data['tag_id']), 'single');
+    if (isset($this->tagSelector) && $this->tagSelector instanceof papaya_tagselector) {
+      $currentTagIds = $this->getCurrentTagIds();
+      $this->tagSelectorForm = $this->tagSelector->getTagSelector($currentTagIds);
       $selectedTags = $this->tagSelector->getSelectedTags();
-      if (current($selectedTags) != $this->data['tag_id']) {
-        $this->data['tag_id'] = current($selectedTags);
+      if ($selectedTags != $currentTagIds) {
+        $this->data['tag_ids'] = $selectedTags;
         $this->modified = TRUE;
       }
     }
@@ -117,15 +116,26 @@ class content_tagcateg extends base_content {
   /**
   * callback function for tag selection
   */
-  function callbackSelectedTag($name, $element, $data) {
+  function callbackSelectedTags($name, $element, $data) {
     $result = '';
-    $tag = $this->tagSelector->getTag($data, $this->parentObj->getContentLanguageId());
+    $tagIds = $this->getCurrentTagIds();
+    $tags = $this->tagSelector->getTags($tagIds, $this->parentObj->getContentLanguageId());
     $result .= sprintf(
       '<input type="text" name="%s[%s]"'.
       ' class="dialogInput dialogScale" value="%s" disabled="disabled"></input>'.LF,
       papaya_strings::escapeHTMLChars($this->paramName),
       papaya_strings::escapeHTMLChars($name),
-      papaya_strings::escapeHTMLChars($tag['tag_title'])
+      papaya_strings::escapeHTMLChars(
+        implode(
+          ',',
+          array_map(
+            function($tag) {
+              return $tag['tag_title'];
+            },
+            $tags
+          )
+        )
+      )
     );
     return $result;
   }
@@ -259,8 +269,9 @@ class content_tagcateg extends base_content {
     $topicList->tableTopics = $this->parentObj->tableTopics;
     $topicList->tableTopicsTrans = $this->parentObj->tableTopicsTrans;
     $topicClass = get_class($this->parentObj);
+    $tagIds = $this->getCurrentTagIds();
     $topicList->loadListByTag(
-      $this->data['tag_id'],
+      $tagIds,
       (int)$this->parentObj->getContentLanguageId(),
       is_a($this->parentObj, 'papaya_publictopic'),
       (int)$this->data['sort']
@@ -326,6 +337,16 @@ class content_tagcateg extends base_content {
       );
     }
     return $result;
+  }
+
+  private function getCurrentTagIds() {
+    if (is_array($this->data['tag_ids']) && count($this->data['tag_ids'])) {
+      return $this->data['tag_ids'];
+    } elseif (!empty($this->data['tag_id'])) {
+      return [$this->data['tag_id']];
+    } else {
+      return [0];
+    }
   }
 }
 
