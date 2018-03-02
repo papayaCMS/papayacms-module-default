@@ -60,7 +60,7 @@ class datafilter_tag extends base_datafilter {
     return FALSE;
   }
 
-  public function prepareFilterData() {
+  public function prepareFilterData($data, $keys) {
 
   }
 
