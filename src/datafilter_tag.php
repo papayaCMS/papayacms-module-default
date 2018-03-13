@@ -48,7 +48,7 @@ class datafilter_tag extends base_datafilter {
   * @param object $contentObj object of content by base_datafilter_list
   * @return boolean status result
   */
-  public function initialize($contentObj) {
+  public function initialize($contentObj = NULL) {
     $this->getPageTags();
     if (isset($this->_tagObject) && is_object($this->_tagObject)) {
       $this->topicId = $contentObj->parentObj->topicId;
@@ -60,7 +60,7 @@ class datafilter_tag extends base_datafilter {
     return FALSE;
   }
 
-  public function prepareFilterData() {
+  public function prepareFilterData($data, $keys) {
 
   }
 
