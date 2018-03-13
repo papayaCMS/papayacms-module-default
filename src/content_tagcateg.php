@@ -340,7 +340,11 @@ class content_tagcateg extends base_content {
   }
 
   private function getCurrentTagIds() {
-    if (is_array($this->data['tag_ids']) && count($this->data['tag_ids'])) {
+    if (
+      isset($this->data['tag_ids']) &&
+      is_array($this->data['tag_ids']) &&
+      count($this->data['tag_ids'])
+    ) {
       return $this->data['tag_ids'];
     } elseif (!empty($this->data['tag_id'])) {
       return [$this->data['tag_id']];
