@@ -6,7 +6,7 @@
 [![Latest Stable Version](https://poser.pugx.org/papaya/module-default/v/stable.svg)](https://packagist.org/packages/papaya/module-default)
 [![Latest Unstable Version](https://poser.pugx.org/papaya/module-default/v/unstable.svg)](https://packagist.org/packages/papaya/module-default)
 
-Copyright: 2002-2014 dimensional GmbH (www.dimensional.de)<br/>
+Copyright: 2002-2018 dimensional GmbH (www.dimensional.de)<br/>
 Licence: GPL V2 - GNU General Public Licence, version 2
 
 -----------------------------------------------------------------------
