@@ -87,7 +87,7 @@ class actionbox_tagteaser extends base_actionbox {
   /**
   * initialize edit dialog, extended by tag selection
   */
-  function initializeDialog() {
+  function initializeDialog($hiddenValues = NULL) {
     $this->tagSelector = papaya_tagselector::getInstance($this);
 
     $this->sessionParamName = 'PAPAYA_SESS_'.get_class($this).'_'.$this->paramName;
@@ -100,18 +100,17 @@ class actionbox_tagteaser extends base_actionbox {
     switch ($this->params['contentmode']) {
     case 1:
       if (isset($this->tagSelector) && is_object($this->tagSelector)) {
-        $this->tagSelectorForm = $this->tagSelector->getTagSelector(
-          array($this->data['tag_id']), 'single'
-        );
+        $tagId = isset($this->data['tag_id']) ? $this->data['tag_id'] : 0;
+        $this->tagSelectorForm = $this->tagSelector->getTagSelector(array($tagId), 'single');
         $selectedTags = $this->tagSelector->getSelectedTags();
-        if (current($selectedTags) != $this->data['tag_id']) {
+        if (current($selectedTags) != $tagId) {
           $this->data['tag_id'] = current($selectedTags);
           $this->modified = TRUE;
         }
       }
       break;
     default:
-      parent::initializeDialog();
+      parent::initializeDialog($hiddenValues);
       break;
     }
   }
