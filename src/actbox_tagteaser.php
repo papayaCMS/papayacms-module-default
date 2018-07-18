@@ -119,7 +119,7 @@ class actionbox_tagteaser extends base_actionbox {
   /**
   * generate edit form
   */
-  function getForm() {
+  function getForm($dialogTitlePrefix = '', $dialogIcon = '') {
     $result = '';
     $result .= $this->getContentToolbar();
 
@@ -135,7 +135,7 @@ class actionbox_tagteaser extends base_actionbox {
       $result .= $this->tagSelectorForm;
       break;
     default:
-      $result .= parent::getForm();
+      $result .= parent::getForm($dialogTitlePrefix, $dialogIcon);
       break;
     }
     return $result;
