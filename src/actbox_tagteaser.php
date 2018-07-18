@@ -188,7 +188,7 @@ class actionbox_tagteaser extends base_actionbox {
   /**
   * return modified state of dialog
   */
-  function modified() {
+  function modified($marker = 'save') {
     if (empty($this->params['contentmode'])) {
       $this->params['contentmode'] = 0;
     }
@@ -196,7 +196,7 @@ class actionbox_tagteaser extends base_actionbox {
     case 1:
       return $this->modified;
     default:
-      return parent::modified();
+      return parent::modified($marker);
     }
   }
 
