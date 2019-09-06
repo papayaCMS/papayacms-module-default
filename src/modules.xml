@@ -1,5 +1,5 @@
 <?xml version="1.0"  encoding="ISO-8859-1" ?>
-  <modulegroup>
+<modulegroup>
   <name>Default/Base</name>
   <description>The Default/Base package provies all the standard modules for articles and the sitemap-based navigation.</description>
   <classes file="_classmap.php"/>
@@ -23,7 +23,6 @@
     <module type="box" guid="41a921a5b6bb4ef582bf0526ec79e07d" name="Categ Teaser" class="actionbox_categteaser">Category box - displays teasers and corresponding links like a category page.</module>
     <module type="box" guid="7bf4d05a9d595bc7c870fac367e3f173" name="Tag Teaser" class="actionbox_tagteaser">This modules displays teaser and link of pages that have been tagged with a specific tag.</module>
     <module type="page" guid="d8170d18ceaa2b07979201babfa7bffb" name="Page Softlink" class="content_softlink" outputfilter="no">This module redirects any page requests internally to another predefined page. The browser isn't redirected explicitly, and the URL does not change.</module>
-    <module type="output" guid="20e80c718e5991d59e938bcdf4e020f2" name="XSLT Output Filter" class="filter_xslt">This module is the standard output formatter using XSLT (ext/xslt, ext/xsl or ext/dom_xml).</module>
     <module type="box" guid="e1b8127035a9799de1ab406898cc3526" name="Page Link" class="actionbox_pagelink" outputfilter="no">This module creates an HTML link to another papaya page. The page link always includes the current page id which is passed to the target page.</module>
     <module type="box" guid="686ce6053d6295df73ff5a788108781f" name="Extended Page Link" class="actionbox_pagelink_extended">This module creates an HTML link to another papaya page. The page link always includes the current page id which is passed to the target page. Users can enter text which is displayed around the link.</module>
     <module type="box" guid="df7a4b35021123dae21a92523b3e096d" name="Categ Teaser with thumb" class="actionbox_categteaserthumb">This box module displays page teasers with thumb images.</module>
